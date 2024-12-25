@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Time Scale Modification</title>
+
+    <script language="javascript" src="js/lib/plotly.js"></script>
+    <script language="javascript" src="js/lib/dsp.js"></script>
+    <script language="javascript" src="js/lib/math.js"></script>
+    <script language="javascript" src="js/lib/tailwindcss.js"></script>
+    <script language="javascript" src="js/lib/tf.js"></script>
+    <script language="javascript" src="js/utils.js"></script>
+    <script language="javascript" src="js/visuals.js"></script>
+    <script language="javascript" src="js/tsm.js"></script>
+    <script language="javascript" src="js/lib/wavefile.js"></script>
+
+
+    <style>
+        /* Style for the loading screen */
+        #loadingScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            font-size: 32px;
+            text-align: center;
+            line-height: 100vh;
+            z-index: 10000000;
+
+        }
+    </style>
+</head>
+
+<body class="bg-fixed bg-cover bg-no-repeat">
+    <div id="loadingScreen">Processing...</div>
+    <div class="font-sans text-white bg-blue-500 bg-opacity-100">
+        <!-- HEADER -->
+        <!----------------------------------------------------->
+        <div style="z-index: 10000000;"
+            class="backdrop-blur-xl bg-blue-700 shadow-xl bg-opacity-80 p-2 flex sticky top-0 justify-between">
+
+            <!-- TITLE-->
+            <div class="text-2xl font-bold flex items-center"> <!-- Added items-center -->
+                <h1>Time Scale Modification</h1>
+            </div>
+
+            <!-- SLIDER -->
+            <div class="flex items-center"> <!-- Changed justify-between to items-center -->
+                <input type="range" id="scaling" class="w-30" min="0.1" max="2" step="0.1" value="1">
+                <span class="mx-5 font-bold text-xl my-1" id="scalingValue">1</span>
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="flex items-center"> <!-- Changed justify-between to items-center -->
+                <!-- PROCESS BUTTON -->
+                <button class="hover:shadow-xl hover:scale-105 w-11 h-11 bg-blue-700 rounded-full" id="process">
+                    <img src="assets/process-icon.svg" alt="Icon" class="w-6 h-6 text-white"
+                        style="margin: auto; filter: invert(1);" />
+                </button>
+
+                <!-- UPLOAD BUTTON -->
+                <label style="cursor:pointer" for="fileInput"
+                    class="hover:shadow-xl hover:scale-105 w-11 h-11 bg-blue-700 rounded-full mx-5 flex items-center justify-center">
+                    <span class="text-xl">+</span>
+                </label>
+                <input type="file" id="fileInput" accept=".wav" hidden />
+            </div>
+        </div>
+
+
+
+        <!----------------------------------------------->
+
+        <!-- CARD-CONTAINER -->
+        <div class="flex justify-center content relative z-10">
+            <div style="width: 1200px;">
+
+                <!-- CARD  Original -->
+                <div
+                    class="backdrop-blur-xl backdrop-brightness-60 bg-blue-600 bg-opacity-40 rounded-md shadow-xl place-content-center p-5 my-10 ">
+
+                    <div class="font-bold text-2xl">
+                        <h3>Original Audio</h3>
+                    </div>
+
+                    <div class="text-justify">
+                        So klingt das Original. Hier können Sie sich einen Eindruck von der Qualität des Originals
+                        verschaffen.
+                    </div>
+
+                    <audio controls id="player-original" style="width: 100%;margin-top: 20px;"></audio>
+
+                    <div class="flex justify-between my-5">
+
+                        <!--  WAVEFORM -->
+                        <div class="bg-opacity-100 bg-slate-300 ">
+                            <canvas id="waveform-original" width=570 height=300></canvas>
+                        </div>
+
+                        <!--  SPECTROGRAM -->
+                        <div class="bg-slate-300">
+                            <canvas id="spectrum-original" width=570 height=300></canvas>
+                        </div>
+
+                    </div>
+
+                    <!--  SPECTROGRAM -->
+                    <div class="bg-slate-300">
+                        <canvas id="spectrogram-original" height="300" width="1160"></canvas>
+                    </div>
+
+                </div>
+
+                <!-- CARD  Decimation -->
+                <div
+                    class="backdrop-blur-xl bg-blue-500 bg-opacity-40 rounded-md shadow-xl place-content-center p-5 my-10 ">
+
+                    <div class="font-bold text-2xl">
+                        <h3>Dezimation</h3>
+                    </div>
+
+                    <div class="text-justify">
+                        Hier hört man was passiert wenn das Audio Signal dezimiert wird.
+                    </div>
+
+                    <audio controls id="player-decimated"
+                        style="width: 100%;margin-top: 20px; margin-bottom: 20px;"></audio>
+                    <!--
+                    <div class="flex justify-between my-5">
+
+                        <!--  WAVEFORM 
+                        <div class="bg-opacity-100 bg-slate-300 ">
+                            <canvas id="waveform-dec" width=570 height=300></canvas>
+                        </div>
+
+                        <!--  SPECTRUM 
+                        <div class="bg-slate-300">
+                            <canvas id="spectrum-dec" width=570 height=300></canvas>
+                        </div>
+
+                    </div>
+
+                -->
+                    <!--  SPECTROGRAM -->
+                    <div class="bg-slate-300">
+                        <canvas id="spectrogram-dec" height="300" width="1160"></canvas>
+                    </div>
+
+                </div>
+
+                <!-- CARD  Overlap add -->
+                <div
+                    class="backdrop-blur-xl bg-blue-500 bg-opacity-40 rounded-md shadow-xl place-content-center p-5 my-10 ">
+
+                    <div class="font-bold text-2xl">
+                        <h3>Overlap-Add</h3>
+                    </div>
+
+                    <div class="text-justify">
+
+                        Das Prinzip von Overlap-Add besteht darin, ein längeres Signal in kleinere,
+                        überlappende Abschnitte zu zerlegen. Diese Abschnitte werden dann separat
+                        verarbeitet und schließlich zu einem zusammengefügt, um das ursprüngliche
+                        Signal wiederherzustellen. Dies ermöglicht die effiziente Anwendung von Filtern
+                        oder Effekten auf große Audiosignale, indem die Verarbeitung auf kleinere Teile
+                        aufgeteilt wird und Overhead durch Pufferung reduziert wird. Overlap-Add wird
+                        häufig in der digitalen Signalverarbeitung eingesetzt, insbesondere bei der
+                        Echtzeitverarbeitung von Audiodaten.
+                    </div>
+
+                    <audio controls id="player-overlap-add"
+                        style="width: 100%;margin-top: 20px; margin-bottom: 20px;"></audio>
+
+                    <!-- <div class="flex justify-between my-5">
+                        <!--  WAVEFORM 
+                        <div class="bg-opacity-100 bg-slate-300 ">
+                            <canvas id="waveform-ola" width=570 height=300></canvas>
+                        </div>
+
+                        <!--  SPECTRUM 
+                        <div class="bg-slate-300">
+                            <canvas id="spectrum-ola" width=570 height=300></canvas>
+                        </div>
+                    </div> -->
+
+                    <!--  SPECTROGRAM -->
+                    <div class="bg-slate-300">
+                        <canvas id="spectrogram-ola" height="300" width="1160"></canvas>
+                    </div>
+
+                </div>
+                <!-- CARD  Phase Vocoder -->
+                <div
+                    class="backdrop-blur-xl bg-blue-500 bg-opacity-40 rounded-md shadow-xl place-content-center p-5 my-10 ">
+
+                    <div class="font-bold text-2xl">
+                        <h3>Phase-Vocoder</h3>
+                    </div>
+
+                    <div class="text-justify">
+
+                        Der Phase Vocoder ermöglicht ebenfalls die Veränderung der Abspielgeschwindigkeit von Audiosignalen. Während Overlap-Add durch das Überlappen und Addieren von Signalabschnitten die
+                        Abspielgeschwindigkeit verändert, nutzt der Phase Vocoder die Kurzzeit-Fourier-Transformation
+                        (STFT), um das Signal in den Frequenzbereich zu transformieren und zu strecken oder zu stauchen.
+                    </div>
+
+                    <audio controls id="player-phase-vocoder"
+                        style="width: 100%;margin-top: 20px; margin-bottom: 20px;"></audio>
+
+                    <!--
+                    <div class="flex justify-between my-5">
+
+                        <!--  WAVEFORM 
+                        <div class="bg-opacity-100 bg-slate-300 " >
+                            <canvas id="waveform-pv" width=570 height=300></canvas>
+                        </div>
+                        
+                        <!--  SPECTRUM 
+                        <div class="bg-slate-300">
+                            <canvas id="spectrum-pv" width=570 height=300></canvas>
+                        </div>
+
+                    </div>
+                    -->
+                    <!--  SPECTROGRAM -->
+                    <div class="bg-slate-300">
+                        <canvas id="spectrogram-pv" height="300" width="1160"></canvas>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <video autoplay muted loop id="bg-video" class="fixed top-0 left-0 min-w-full min-h-full object-cover z-0">
+        <source src="assets/background-vid.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <script src="js/main_wav.js"></script>
+    <!--<script src="main.js"></script>-->
+</body>
+
+</html>

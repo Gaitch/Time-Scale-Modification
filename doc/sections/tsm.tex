@@ -1,0 +1,199 @@
+\section{Time-Scale Modification}
+\label{sec:tsm}
+Wie im vorherigen Kapitel angesprochen, werden nun die verschiedenen Verfahren betrachtet, um die genannten Ziele zu erreichen. Noch einmal kurz zusammengefasst: Time-Scale Modification ist ein Verfahren in der digitalen Signalverarbeitung, bei dem Audiosignale gestreckt oder gestaucht werden. Idealerweise hat dies keine Auswirkung auf die Tonhöhe (Pitch) oder die Klangfarbe (Timbre). Da dies in praktischen Anwendungen nahezu unmöglich ist, gilt es, die auftretenden Verzerrungen möglichst in einem nicht merkbaren Bereich zu halten. Ein möglicher Anwendungsbereich ist die Bearbeitung von Audio in der Musik- und Filmindustrie. Overlap-Add und der Phase Vocoder werden im Detail betrachtet.
+
+\paragraph{}
+Für die konkrete Implementierung einer Time-Scale Modification lässt sich das Prinzip in zwei grundlegende Konzepte unterteilen: die Verarbeitung im Zeitbereich und die Verarbeitung im Frequenzbereich. Das generelle Vorgehen ist dabei sehr ähnlich.
+
+\subsection{Overlap-Add (OLA)}
+\label{sec:ola}
+Begonnen wird mit dem Overlap-Add-Verfahren, da es eine essentielle Technik in der digitalen Signalverarbeitung ist, die verwendet wird, um lange Signale effizient zu filtern und zu transformieren. Genau diese Anwendung wird in der Time-Scale Modification genutzt. Das Signal wird in überlappende Segmente zerlegt, die dann individuell verarbeitet werden. Anschliessend werden die bearbeiteten Segmente wieder zusammengesetzt. Auf diese Weise wird eine hohe Qualität bei der Modifikation der Wiedergabedauer erreicht. Zudem bildet das Overlap-Add-Verfahren die Basis für alle weiteren hier behandelten Methoden. Wie das genau funktioniert, wird in den folgenden Abschnitten genauer erläutert.
+
+\paragraph{Frames:}
+Der erste Schritt beim Overlap-Add-Verfahren ist die Unterteilung des Audiosignals in gleich grosse Frames. Die Länge der Frames sollte dabei nicht willkürlich gewählt werden, sondern hängt vom Audiosignal ab. Die Länge der Frames bestimmt die im Frame auftretenden lokalen Frequenzen. Ist der Frame zu klein, können die Frequenzen möglicherweise nicht korrekt erkannt werden. Ist der Frame zu gross, können die Frequenzen nicht mehr lokalisiert werden. Zudem beeinflusst die Frame-Länge die Auflösung im Frequenzbereich. Diese Faktoren werden im späteren Kapitel \ref{sec:pv} über den Phase Vocoder noch genauer betrachtet.
+
+\paragraph{}
+Gleichung \eqref{eq:eqframes} zeigt wie ein Frame generiert wird. Dabei ist $H_a$ die Analyse HOP-Size und $m$ der Index des Frames. der Index $r$ entspricht dabei dem Index des Samples. Die Hop-Size wird im nächsten Abschnitt genauer erläutert.
+
+\begin{equation}
+    \label{eq:eqframes}
+    x_m(r)=
+    \begin{cases}
+        x(r+mH_\mathrm{a}), & \mathrm{wenn~}r\in[-N/2:N/2-1], \\0,&\text{sonst.}
+    \end{cases}
+\end{equation}
+
+\paragraph{Analyse:}
+Bevor die Frames erzeugt werden können, muss zuerst eine Analyse-HOP-Size bestimmt werden. Die Analyse-HOP-Size ist die Anzahl der Samples, um welche das Zeitfenster verschoben wird, um den nächsten Frame zu generieren. Manchmal ist mit der HOP-Size auch die Überlagerung der Frames gemeint anstelle der Verschiebung. Bei der Wahl der Analyse-HOP-Size ist zu beachten, dass ein kleiner Wert zu einer besseren Zeitauflösung führt, jedoch zu einer schlechteren Frequenzauflösung. Ein grösserer Wert führt zu einer besseren Frequenzauflösung, jedoch zu einer schlechteren Zeitauflösung. Die übliche Wahl für die Analyse-HOP-Size ist \(N/2\) oder \(N/4\), wobei \(N\) die Länge des Frames ist.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Frames.png}
+    \caption{Aufteilung des Signals in Frames}
+    \label{fig:frames}
+\end{figure}
+
+
+\paragraph{Synthese:}
+Neben der Analyse-HOP-Size muss auch die Synthese-HOP-Size bestimmt werden. Die Synthese-HOP-Size ist die Überlagerung oder auch die Verschiebung der Frames, wenn diese wieder zusammengesetzt werden. Das Zusammenspiel beziehungsweise das Verhältnis von Analyse-HOP-Size und Synthese-HOP-Size entscheidet über die resultierende Streckung des Audiosignals. Dieser Wert wird als Stretching Factor bezeichnet und wird in der Regel mit $\alpha$ bezeichnet. Er ist abhängig von der gewünschten Streckung oder Stauchung des Signals. Die Formel für den Stretching Factor ist in Gleichung \eqref{eq:streching_factor} beschrieben. Die Frames werden nun also wie in Abbildung~\ref{fig:überlagerung} miteinander überlagert.
+
+\begin{equation} \label{eq:streching_factor}
+    \alpha = \frac{H_s}{H_a}
+\end{equation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Verschiebung zu Synthese.png}
+    \caption{Überlagerung der Frames}
+    \label{fig:überlagerung}
+\end{figure}
+
+\paragraph{}
+Auf den ersten Blick scheint alles sehr straightforward zu sein. Schaut man jedoch genauer auf das dabei erzeugte Signal, so fallen einige Probleme auf. In Abbildung~\ref{fig:artefakte-ola} sind die Problemstellen markiert. Die violette Linie zeigt die ursprüngliche Amplitude des Signals. Es ist klar zu erkennen, dass die Amplituden des neuen Signals stark schwanken und teilweise weit über den ursprünglichen Wert steigen.
+
+\paragraph{}
+Ein weiteres Problem sind die Übergänge zwischen den einzelnen Frames. Diese sind in Abbildung~\ref{fig:artefakte-ola} rot markiert. An diesen Stellen kommt es zu sogenannten Phasensprüngen, also plötzlichen Änderungen der Phase. Dies kann hörbare Effekte verursachen, wie beispielsweise Klangverzerrungen oder Auslöschungen, besonders wenn mehrere Audiosignale miteinander kombiniert werden. Dazu mehr im Kapitel \ref{sec:Artefakte}. Wie diese Probleme gelöst werden können, wird im nächsten Abschnitt erläutert.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Probleme bei Synthese.png}
+    \caption{Artefakte bei der Synthese von Frames}
+    \label{fig:artefakte-ola}
+\end{figure}
+
+
+\paragraph{Window function:}
+Um die eben beschriebenen Probleme zu lösen, wird eine sogenannte Window Funktion verwendet. Eine Window-Funktion in der Signalverarbeitung ist eine mathematische Funktion, die auf ein Signal angewendet wird, um es für die Analyse oder Verarbeitung vorzubereiten. Im Zusammenhang der Time-Scale Modification wird die Window-Funktion verwendet, um die Amplituden der Frames and den Enden, bzw. den Übergängen, zu dämpfen. Die Wahl der Window-Funktion ist dabei entscheidend. Die bekanntesten Window-Funktionen sind das Rechteckfenster, das Hann-Fenster und das Hamming-Fenster. Die Wahl der Window-Funktion ist abhängig von der Anwendung. Im Falle der Time-Scale Modification wird meistens das Hann-Fenster verwendet. Die Formel für das Hann-Fenster ist in Gleichung \eqref{eq:hann} beschrieben. Dabei ist $r$ der Index des Samples und $N$ die Länge des Frames~\cite{christensen2019introduction}.
+
+\begin{equation}
+    \label{eq:hann}
+    w(r) = \frac{1}{2}\left(1 - \cos\left(\frac{2\pi r}{N}\right)\right)
+\end{equation}
+
+\paragraph{}
+Nach Anwendung der Window Function auf einen Frame lässt sich in Abbildung~\ref{fig:hanning-window} erkennen, dass die Amplituden der Frames nun gedämpft sind. Die Amplituden der Frames sind nun nicht mehr so stark schwankend und liegen näher an den ursprünglichen Amplituden des Signals. Die Übergänge zwischen den Frames sind nun auch nicht mehr so stark ausgeprägt. Die Phasensprünge sind jedoch immer noch vorhanden.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{images/Hanning-Fenster.png}
+    \caption{Hanning Fenster angewendet auf einen Frame}
+    \label{fig:hanning-window}
+\end{figure}
+
+Dan nun die Enden eines jeden Frames abgeschwächt sind, können die Frames nun wie in Abschnitt der Synthese beschrieben, wieder miteinander überlagert werden. Veranschaulicht wird das in Abbildung~\ref{fig:synthese-windowed}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Windowed Frames.png}
+    \caption{Überlagerung der Frames nach Anwendung der Window Funktion}
+    \label{fig:synthese-windowed}
+\end{figure}
+
+\paragraph{}
+Danach werden die Frames wieder zusammengefügt. Das Ergebnis ist in Abbildung~\ref{fig:synthese-windowed-added} dargestellt. Es ist klar zu erkennen, dass die Amplituden der Frames nun nicht mehr so stark schwanken und die Übergänge zwischen den Frames nicht mehr so stark ausgeprägt sind. Die Phasensprünge sind jedoch immer noch vorhanden. Welche weitere Schritte unternommen werden können, um die Phasensprünge zu minimieren, wird im nächsten Abschnitt kurz erläutert.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Windows addiert.png}
+    \caption{Addition der Frames nach Anwendung der Window Funktion}
+    \label{fig:synthese-windowed-added}
+\end{figure}
+
+\subsection{Waveform Similarity Overlap-Add (WSOLA)}
+Um die im vorherigen Kapitel aufgeführten Probleme zu minimieren, wurde das Waveform Similarity Overlap-Add (WSOLA) Verfahren entwickelt. WSOLA ist eine erweiterte Methode des Overlap-Add-Verfahrens, um die hörbaren Artefakte, welche durch Phasensprünge und Amplitudenschwankungen entstehen zu minimieren. WSOLA verbessert die Qualität der Zeitskalierung, indem es die besten Überlappungspunkte zwischen benachbarten Frames sucht, um eine möglichst glatte Übergang zu gewährleisten.
+
+\paragraph{}
+Im Gegensatz zum einfachen Overlap-Add-Verfahren analysiert WSOLA die Waveform und verschiebt sie leicht, um die Ähnlichkeit an den Überlappungsbereichen zu maximieren. Dies reduziert Phasensprünge und führt zu einem natürlicheren Klang.Dabei besteht WSOLA aus den folgenden Schritten:
+
+\begin{enumerate}
+    \item Unterteilung des Signals in überlappende Frames.
+    \item Suche nach den optimalen Überlappungspunkten, um die Ähnlichkeit der Wellenformen zu maximieren.
+    \item Anpassung und Verschiebung der Frames, um die besten Überlappungspunkte zu erreichen.
+    \item Zusammensetzen der Frames, um das skalierten Audiosignal zu erzeugen.
+\end{enumerate}
+
+Für die passende Verschiebung der Frames wird ein Algorithmus verwendet, der die Ähnlichkeit der Wellenformen maximiert. Dieser Algorithmus basiert auf der Kreuzkorrelation. Damit lässt sich die Ähnlichkeit zwischen zwei Signalen messen. Dies zeigt, wie gut ein Signal mit einem verschobenen zweiten Signal übereinstimmt.
+
+\paragraph{}
+Die Kreuzkorrelation \( R_{xy}(k) \) von zwei diskreten Signalen \( x[n] \) und \( y[n] \). Hierbei gibt \( k \) die Verschiebung an. Ein hoher Wert von \( R_{xy}(k) \) bedeutet, dass die Signale in diesem Bereich gut übereinstimme~\cite{frey2013signal}. Die Kreuzkorrelation kann wie folgt berechnet werden:
+
+\begin{equation}
+    R_{xy}(k) = \sum_{n} x[n] \cdot y[n + k]
+\end{equation}
+
+\paragraph{}
+Somit kann WSOLA eine hohe Qualität bei der Modifikation der Wiedergabedauer des Audiosignals erreichen und dabei die hörbaren Artefakte minimieren. Allerdings kann WSOLA nur die dominantisten Frequenzen korrekt verarbeiten, da die Suche nach den optimalen Überlappungspunkten auf den Amplituden der Frames basiert. Feinere Frequenzen werden dabei vernachlässigt bzw. nur teilweise korrekt verarbeitet~\cite{Driedger2016ARO}.
+
+\subsection{Phase Vocoder (PV)}
+\label{sec:pv}
+Die im vorherigen Teil betrachteten Verfahren reduzierten sich lediglich auf den Zeitbereich. Mit dem Phase Vocoder steht ein ein leistungsstarkes Tool für die Manipulation der zeitlichen und spektralen Eigenschaften zu verfügung und ist bestens geeignet für die Anwendung der TSM.
+
+\paragraph{}
+Wie bereits erwähnt, führen gezeigten Methoden zur TSM, wie das OLA, oft zu unerwünschten Artefakten . Der Phase Vocoder überwindet diese Einschränkungen durch eine Technik, die auf der Kurzzeit-Fourier-Transformation (STFT) basiert. Diese Technik ermöglicht es, die zeitlichen Eigenschaften eines Signals unabhängig von dessen Frequenzinhalt zu modifizieren, indem die Phase und Amplitude der spektralen Komponenten des Signals präzise angepasst werden.
+
+\paragraph{OLA im Phase Vocoder:}
+Die Grundlage für den Phase-Vocoder bildet das Overlap-Add-Verfahren, welches bereits im Kapitel~ref{sec:ola} beschrieben wurde. Denn auch der Phase-Vocoder zerlegt das Audiosignal zuerst in überlappende Frames. Doch anstelle das die Verschiebung direkt vorgenommen wird, werden die einzelnen Frames zuerst in den Frequenzbereich transformiert. Dies geschieht durch die Kurzzeit-Fourier-Transformation welche im nächsten Abschnitt behandelt wird. Nach der Transformation in den Frequenzbereich findet dann die eigentliche Zeitdehnung statt. Nach der Manipulation entlang der Zeitachse wird das Signal wieder in Zeitbereich transformiert und die Frames wieder zusammengefügt.
+
+\paragraph{Diskrete Fourier-Transformation:}
+Bevor die Kurzzeit-Fouriertransformation betrachtet werden kann, muss zuerst die Fouriertransformation erläutert werden. Die Fouriertransformation ist eine mathematische Methode, die ein Signal in den Frequenzbereich transformiert~\cite{frey2013signal}.
+
+\[
+    X(k) = \sum_{n=0}^{N-1} x(n) \cdot e^{-i \frac{2\pi}{N} k n}
+\]
+
+\paragraph{}
+Die diskrete Fouriertransformation ist eine rechenintensive Operation und kann zu Verzögerungen in der Verarbeitung führen. Die meisten Implementationen der Fouriertransformation verwenden die schnelle Fouriertransformation (FFT), um die Berechnung zu beschleunigen. Die FFT ist ein Algorithmus, der die diskrete Fouriertransformation in \(O(n \log n)\) Zeit berechnet. Eine Voraussetzung dafür ist jedoch, dass die Länge des Signals eine Potenz von 2 ist. Somit wird bei der Erstellung der Frames darauf geachtet, dass diese eine Länge von Potenzen von 2 aufweisen~\cite{Cooley1965AnAF}.
+
+\paragraph{Kurzzeit-Fourier-Transformation (STFT):}
+Wie im vorherigen Abschnitt angesprochen, wird das Audiosignal zuerst in den Frequenzbereich transformiert. Für den Phase Vocoder (PV) wird dafür die Kurzzeit-Fouriertransformation (STFT) benötigt. Die STFT ist eine leistungsstarke Technik in der digitalen Signalverarbeitung, die verwendet wird, um die spektralen Eigenschaften eines Signals in kurzen Zeitfenstern zu analysieren. Die STFT zerlegt ein Signal in überlappende Frames, die dann in den Frequenzbereich transformiert werden. Dies ermöglicht es, die spektralen Eigenschaften eines Signals im Zeitverlauf zu verfolgen und zu modifizieren.
+
+\paragraph{}
+Die STFT eines Signals $x(t)$ wird durch die Gleichung~\eqref{eq:stft} definiert, wobei $X(m,k)$ die STFT des Signals ist, $x_m(r)$ das $m$-te Frame des Signals ist, $w(r)$ die Fensterfunktion ist, und $N$ die Länge des Frames ist.
+
+\begin{equation}
+    \label{eq:stft}
+    X(m,k)=\sum_{r=-N/2}^{N/2-1}x_m(r)w(r)\exp(-2\pi ikr/N)
+\end{equation}
+
+Durch die Anwendung der STFT auf ein Audiosignal wird ein Spektrogramm generiert. Dies bildet die Amplitude und Phase auf der Zeit- und Frequenzebene ab. Ein Beispiel für ein Spektrogramm ist in Abbildung~\ref{fig:spectrogram} dargestellt. Die Farbskala gibt dabei die Amplitude des Signals an, wobei helle Farben hohe Amplituden und dunkle Farben niedrige Amplituden repräsentieren. Das Spektrogramm ermöglicht es, die spektralen Eigenschaften eines Signals im Zeitverlauf zu visualisieren und zu analysieren. Dies ist besonders nützlich bei der Zeitdehnungsmodifikation von Audiosignalen, da es ermöglicht, die spektralen Komponenten des Signals präzise zu manipulieren.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/spectrogram.png}
+    \caption{Spectrogram nach der STFT}
+    \label{fig:spectrogram}
+\end{figure}
+
+\paragraph{}
+Die Kurzzeit-Fourier-Transformation unterliegt einigen Einschränkungen. Zum einen ist die Auflösung der Frequenzen abhängig von der Länge des Frames. Die maximale Auflösung der Frequenzen berechnet sich durch Gleichung~\eqref{eq:freq_res}, wobei $f_s$ die Abtastrate des Signals und $N$ die Länge des Frames ist.
+
+\begin{equation}
+    \label{eq:freq_res}
+    \Delta f = \frac{f_s}{N}
+\end{equation}
+
+Ein zu kleiner Frame kann dazu führen, dass die Frequenzen nicht korrekt erkannt werden. Ein zu grosser Frame kann dazu führen, dass die Frequenzen nicht mehr lokalisiert werden können. Diese Faktoren sind entscheidend für die Qualität der Zeitdehnungsmodifikation.
+
+Die maximale erkennbare Frequenz wird durch die Nyquist-Frequenz bestimmt. Die Nyquist-Frequenz, gemäss Gleichung~\eqref{eq:nyquist}, ist die Hälfte der Abtastrate des Signals.
+
+\begin{equation}
+    \label{eq:nyquist}
+    f_{\text{nyquist}} = \frac{f_s}{2}
+\end{equation}
+
+Ein weiteres Problem ist die Phaseninformation. Diese ist entscheidend für die Rekonstruktion des Signals im Zeitbereich. Die Phaseninformation kann jedoch durch die STFT verloren gehen, was zu Phasensprüngen führen kann, die hörbare Artefakte verursachen. Um diese Probleme zu lösen, wird im Phase-Vocoder die Phaseninformation präzise verarbeitet. Dazu mehr im nächsten Abschnitt.
+
+\paragraph{Lineare Interpolation:}
+Nach der Kurzzeit-Fourier-Transformation (STFT) werden die spektralen Komponenten des Signals präzise manipuliert, um die Zeitdehnung zu erreichen. Die lineare Interpolation ermöglicht es, die spektralen Eigenschaften eines Signals im Zeitverlauf zu modifizieren, ohne die Tonhöhe zu beeinflussen. Die lineare Interpolation wird durch die Gleichung~\eqref{eq:interpolation} definiert, wobei \( X(m, k) \) die STFT des Signals ist, \( X'(m, k) \) die interpolierte STFT des Signals ist und \( \alpha \) der Streching Factor ist. Die Gleichung beschreibt, wie die interpolierte STFT \( X'(m, k) \) als gewichtete Kombination der STFTs \( X_1(m, k) \) und \( X_2(m, k) \) der benachbarten Zeitpunkte \( t \) und \( t + 1 \) berechnet wird. Der Streching Factor \( \alpha \) steuert das Ausmass der Interpolation zwischen den beiden STFTs. Wenn \( \alpha = 0 \), wird die STFT des ersten Zeitpunkts verwendet, wenn \( \alpha = 1 \), wird die STFT des zweiten Zeitpunkts verwendet, und \( 0 < \alpha < 1 \) führt zu einer Interpolation zwischen den beiden~\cite{Lazzarini2019ComputerMI}.
+
+\begin{equation}
+    \label{eq:interpolation}
+    X(m, k) = (1 - \alpha) \cdot X_1(m, k) + \alpha \cdot X_2(m, k)
+\end{equation}
+
+\subsection{Phase Vocoder mit Phase Locking (PVPL)}
+Der Vollständigkeitshalber wird hier das Phase Locking des Phase Vocoder beschrieben. Aufgrund der fehlenden Implementation dazu wird dies nur kurz überflogten. PVPL ist eine Technik, die verwendet wird, um die Phaseninformation der spektralen Komponenten eines Signals präzise zu verarbeiten. Die Phaseninformation ist entscheidend für die Rekonstruktion des Signals im Zeitbereich. Durch das Phase Locking wird sichergestellt, dass die Phaseninformation der spektralen Komponenten konsistent bleibt, auch wenn das Signal manipuliert wird. Dies minimiert Phasensprünge und verhindert hörbare Artefakte\cite{Driedger2016ARO}.
+
+\subsection{Harmonic-Percussive Source Separation (HPSS)}
+Auch Harmonic-Percussive Source Separation (HPSS) wird hier nur kurz zur vollständigkeit erläutert. Bei HPSS handelt es sich um  eine Technik, die im Zusammenhang mit der Time-Scale Modification (TSM) von Audiosignalen verwendet wird. HPSS ist eine Methode zur Trennung von harmonischen und perkussiven Komponenten eines Signals. Harmonische Komponenten sind periodische Schwingungen, die durch harmonische Oberschwingungen charakterisiert sind, wie z.B. Musikinstrumente oder Gesang. Perkussive Komponenten sind nicht-periodische Schwingungen, die durch Impulse oder Stösse charakterisiert sind, wie z.B. Schlagzeug oder Percussion. HPSS ermöglicht es, harmonische und perkussive Komponenten eines Signals getrennt zu analysieren und zu modifizieren, was in der Musikproduktion und Audioverarbeitung nützlich ist \cite{Driedger2016ARO}.

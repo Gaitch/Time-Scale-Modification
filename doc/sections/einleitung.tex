@@ -1,0 +1,13 @@
+\section{Einleitung}
+Es gibt zahlreiche praktische Anwendungsfälle, in denen es erwünscht ist, die Wiedergabegeschwindigkeit eines Audiostücks anzupassen, sei es durch Verlangsamen oder Beschleunigen. Ein Beispiel hierfür wäre die Synchronisierung eines Videos in Zeitlupe mit der zugrunde liegenden Audio. Auf den ersten Blick scheint die Lösung einfach zu sein. Durch Interpolation oder Dezimierung der Samples sollte es möglich sein, den gewünschten Effekt zu erzielen. Bis zu einem gewissen Grad ist die Annahme auch korrekt. Allerdings liegt das Problem darin, dass dabei ein bekanntes Phänomen auftritt. Obwohl das Signal in der Zeitdomäne verändert wird, hat dies auch Auswirkungen auf die Frequenzen. Genauer gesagt verändern sich die Tonhöhe (Pitch) und die Klangfarbe (Timbre) des Signals. Das bedeutet, dass ein gestrecktes oder gestauchtes Signal nicht nur schneller oder langsamer klingt, sondern auch seine charakter\-istisch\-en klang\-lichen Ei\-genschaften verändert werden. 
+\paragraph{}
+Um mit diesem Phänomen umzugehen, gibt es verschiedene etablierte Verfahren, die unter dem Begriff Time-Scale Modification (TSM) zusammengefasst werden. Für die konkrete Implementierung gibt es verschiedene Ansätze, die in zwei Hauptkategorien unterteilt werden können: den Zeitbereich und den Frequenzbereich. Innerhalb dieser Kategorien gibt es unterschiedliche Implementationsmöglichkeiten. In dieser Arbeit werden folgende Verfahren beschrieben:
+\begin{itemize}
+    \item Overlap-Add (OLA)
+    \item Waveform Similarity Overlap-Add (WSOLA)
+    \item Phase Vocoder (PV)
+    \item Phase Vocoder mit Phase Locking (PVPL)
+    \item Harmonic-Percussive Source Separation (HPSS)
+\end{itemize}
+Im Rahmen dieser Arbeit wurden in Kapitel \ref{sec:problemstellung} die genannten Probleme beschrieben und mit Beispielen demonstriert. Anschliessend wurden die oben genannten Verfahren in Kapitel \ref{sec:tsm} detailliert erläutert, wobei der Schwerpunkt auf OLA und PV liegt, da diese in JavaScript implementiert und auf einer Webseite präsentiert werden. Dies wird in Kapitel \ref{sec:implementation} behandelt. Abschliessend wird in Kapitel \ref{sec:auswertung} die Implementierung analysiert und diskutiert, um Artefakte und mögliche Verbesserungen aufzuzeigen.
+

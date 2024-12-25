@@ -1,0 +1,26 @@
+\section{Methodik}
+Bevor die verschiedenen Lösungsansätze zur Time-Scale Modification beschrieben werden, wird zunächst die Methodik ausführlich erläutert. Zuerst wird dargelegt, welche Tools und Softwarelösungen für die Entwicklung der Algorithmen, die Analyse der Ergebnisse und die Dokumentation des Projekts verwendet wurden. Dazu gehören Entwicklungsumgebungen, Programmiersprachen und spezifische Bibliotheken. Anschliessend wird detailliert erklärt, welche Methoden und Techniken angewendet werden, um die korrekte Verarbeitung der Audiosignale zu gewährleisten. Dies umfasst die Validierung der implementierten Algorithmen sowie die Verfahren zur Sicherstellung der Signalintegrität während der Modifikationsprozesse.
+
+\subsection{Tools}
+In diesem Kapitel werden die verwendeten Tools beschrieben, die im Verlauf dieses Projekts sowohl für die Implementierung der Algorithmen als auch für die Analyse der Ergebnisse eingesetzt wurden.
+
+\paragraph{Python:}
+Für die Analyse und Erzeugung der Bilder, die zur Dokumentation der Arbeit verwendet wurden, kam Python zum Einsatz. Python ist eine Programmiersprache, die sich durch ihre einfache Syntax und die grosse Anzahl an Bibliotheken auszeichnet. Insbesondere wurde für diese Arbeit die Bibliothek Matplotlib verwendet, mit der sich einfach Graphen und Bilder erzeugen lassen. Für die Verarbeitung der generierten Audiodateien erwies sich SciPy als hervorragend geeignet. SciPy ist eine Bibliothek, die sich auf die Verarbeitung wissenschaftlicher Daten spezialisiert hat und beispielsweise die Erzeugung von Spektrogrammen ermöglicht.
+
+\paragraph{ChatGPT:}
+Kaum ein Tool ist so vielseitig wie ChatGPT. ChatGPT erwies sich als äusserst nützlich, um Informationen aus verschiedenen Perspektiven zu erklären oder zu übersetzen. Auch beim Debugging leistete ChatGPT wertvolle Unterstützung, indem es Fehlermeldungen in verständliche Sprache übersetzte oder Implementierungsfehler schnell identifizierte. Es sei jedoch darauf hingewiesen, dass ChatGPT nicht immer die richtige Antwort liefert, daher ist es wichtig, die Antworten zu überprüfen. Auch beim Ausarbeiten von Texten konnte auf KI zurückgegriffen werden, beispielsweise um Sätze umzuformulieren oder die Rechtschreibung zu überprüfen.
+
+\paragraph{Google Chrome:}
+Google Chrome ist ein Webbrowser, der sich durch seine hohe Geschwindigkeit und Benutzerfreundlichkeit auszeichnet. Für die Implementierung der Algorithmen in JavaScript und die Erstellung der Webseite war Google Chrome das bevorzugte Tool. Durch die Entwicklerkonsole von Google Chrome konnten Fehler schnell identifiziert und behoben werden. Da während des gesamten Implementierungsprozesses Google Chrome für die Ausführung und das Debugging der Webseite verwendet wurde, besteht die Möglichkeit, dass in anderen Browsern nicht alle Funktionen korrekt funktionieren.
+
+\subsection{Analyse}
+In diesem Kapitel wird beschrieben, wie die Ergebnisse analysiert wurden. Es werden verschiedene Methoden erläutert und gezeigt, wie Artefakte entstehen und wie diese minimiert werden können.
+
+\paragraph{Referenzsignal:}
+Zur Analyse der Ergebnisse der verschiedenen Methoden wurde ein 440 Hz Sinuston als Referenzsignal verwendet. Dieses Signal diente dazu, die Ergebnisse der verschiedenen Methoden zu visualisieren und einen klaren Vergleich zu ermöglichen. Durch die Verwendung eines einfachen Signals ohne Störungen oder Artefakte konnte sichergestellt werden, dass etwaige Abweichungen oder Veränderungen in den Ergebnissen direkt auf die angewandten Methoden zurückzuführen sind. Somit bot das Referenzsignal eine solide Basis für eine präzise Analyse der Leistungsfähigkeit und Genauigkeit der untersuchten Verfahren.
+
+\paragraph{Audiacity:}
+Für die Erzeugung des Referenzsignals wurde die Software Audacity verwendet. Audacity ist ein Open-Source-Programm zur Bearbeitung von Audiodateien, das es ermöglicht, Audiodateien aufzunehmen, zu bearbeiten und abzuspielen.
+
+\paragraph{Perfect Reconstruction:}
+Ein wichtiges Konzept in der Audioverarbeitung ist die Perfect Reconstruction. Das bedeutet, dass das Signal nach der Verarbeitung wieder genau so aussieht wie vor der Verarbeitung, sodass Amplitude und Frequenz des Signals erhalten bleiben. Das Perfect Reconstruction ist von zentraler Bedeutung in der Audioverarbeitung, da es sicherstellt, dass das Signal nicht verfälscht wird und somit die Qualität und Integrität des Signals gewährleistet bleibt. Es ist ein entscheidendes Kriterium für die Effektivität und Zuverlässigkeit von Audioverarbeitungsalgorithmen und -systemen~\cite{itsp2022}.

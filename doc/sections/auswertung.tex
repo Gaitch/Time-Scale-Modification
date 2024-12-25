@@ -1,0 +1,100 @@
+\section{Auswertung}
+\label{sec:auswertung}
+In diesem Kapitel werden die Ergebnisse der Implementierung analysiert und diskutiert. Dabei wird auf die Qualität der Ergebnisse eingegangen und die Unterschiede in den Ergebnissen, zwischen den verschiedenen Methoden aufgezeigt. Dabei wurde ein 440 Herz Sinus als Referenzsignal Signal verwendet, um die Ergebnisse zu visualisieren. Das Signal hat eine Zeitdauer von fünf Sekunden. Damit lassen sich die Unterschiede zwischen den verschiedenen Methoden besser darstellen und können mit der Theorie in Kapitel \ref{sec:tsm} verglichen werden. Zudem werden mögliche Schritte zur Verbesserung und der Weiterentwicklung der Implementierung aufgezeigt. Zum Schluss wird ein Rückblick auf die Arbeit gegeben.
+
+\subsection{Perfect Reconstruction}
+\label{sec:perfect-reconstruction}
+Eine Möglichkeit, die Implementierung auf ihre Richtigkeit zu prüfen, zumindest in einem gewissen Rahmen, ist durch die Perfect Reconstruction. Das bedeutet, dass wenn das Eingangssignal den Algorithmus mit einem Streckungsfaktor von eins durchläuft, das Ausgangssignal identisch zum Eingangssignal sein muss.
+
+\paragraph{OLA: Perfect Reconstruction:}
+Um die Perfect Reconstruction für das OLA-Verfahren zu überprüfen, wird das Referenzsignal, ein 440 Hz Sinus, mit einem Streckungsfaktor von 1 durch den Algorithmus geführt. Das Ergebnis ist in Abbildung \ref{fig:pr-ola} dargestellt. Dabei ist zu erkennen, dass das Ausgangssignal fast identisch zum Eingangssignal ist. Dies bedeutet, dass das OLA-Verfahren die Perfect Reconstruction weitgehend erfüllt.
+
+\paragraph{}
+Jedoch scheint es am Anfang des Signals zu leichten Abweichungen zu kommen. Da diese Abweichung nur am Anfang auftritt, könnte dies auf einen Fehler bei der Generierung des ersten Frames hindeuten. Diese Abweichungen sind jedoch sehr kurz und treten nicht periodisch auf, sodass ausgeschlossen werden kann, dass sie hörbar sind.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Perfect Reconstruction - Overlap-Add.png}
+    \caption{Visualisierung der Perfect Reconstruction für OLA}
+\label{fig:pr-ola}
+\end{figure}
+
+\paragraph{PV: Perfect Reconstruction:}
+Das gleiche Vorgehen wird auch für das Phase-Vocoder-Verfahren (PV) durchgeführt. Dabei wird das Audiosignal mit einem Streckungsfaktor von 1 durch den Algorithmus geführt. Das Ergebnis ist in Abbildung \ref{fig:pr-pv} dargestellt. Auch hier sind die Signale fast ausnahmslos identisch. Allerdings sind auch hier leichte Abweichungen am Anfang des Signals zu erkennen.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Perfect Reconstruction - Phase Vocoder.png}
+    \caption{Visualisierung der Perfect Reconstruction für PV}
+\label{fig:pr-pv}
+\end{figure}
+
+\paragraph{}
+Da bei beiden Verfahren die gleichen Probleme auftauchen, lässt sich darauf schliessen, dass diese durch die Implementierung des OLA-Verfahrens hervorgerufen werden. Denn dieses bildet die Grundlage für das PV-Verfahren. Während der Entwicklungsphase wurde mit einem etwas anderen Signal getestet, das andere Eigenschaften am Anfang des Signals aufwies. Daher blieb der Fehler bis zum Schluss unentdeckt.
+
+\subsection{Artefakte}
+\label{sec:Artefakte}
+Audioartefakte sind unerwünschte Veränderungen oder Störungen in einem Audiosignal, die während der Aufnahme, Bearbeitung, Übertragung oder Wiedergabe auftreten können. Sie können verschiedene Formen annehmen, darunter Rauschen, Verzerrungen, Knacken, Flimmern, Dropouts, Aliasing und Echo. Diese Artefakte können durch eine Vielzahl von Faktoren verursacht werden, wie technische Einschränkungen von Geräten oder Software, unzureichende Datenkompression, ungenaue Signalverarbeitungsalgorithmen oder Störungen während der Übertragung. In der Audioverarbeitung sind Artefakte oft unerwünscht, da sie die Qualität des Audiosignals beeinträchtigen und die Wahrnehmung des Zuhörers stören können. Daher ist es wichtig, Artefakte zu minimieren oder zu eliminieren, um eine hohe Audioqualität zu gewährleisten. Nachfolgend werden die Artefakte der Implementierung betrachtet. Dafür 
+
+\paragraph{OLA Streckung 0.5:}
+Als erstes wird das Referenzsignal, ein 440 Hz Sinus, mit dem OLA-Verfahren um den Faktor 0.5 gestreckt. Das Ergebnis ist in Abbildung \ref{fig:ola05} dargestellt. Dabei ist zu erkennen, dass das Signal tatsächlich gestreckt wurde. Allerdings ist auch klar zu erkennen, dass das Signal nicht mehr genau dem Referenzsignal entspricht. Das bedeutet, dass Artefakte entstanden sind.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Sinus gestreckt mit Overlap-Add (0.5).png}
+    \caption{Gestrecktes Referenzsignal mit OLA}
+    \label{fig:ola05}
+\end{figure}
+
+\paragraph{}
+Die Artefakte entstehen durch die mit dem Referenzsignal überlagerte Fensterfunktion (Hann-Window), wie in Kapitel~\ref{sec:ola} beschrieben. Zwar können dabei die Phasensprünge minimiert werden, allerdings entstehen dadurch andere Artefakte. Vor allem bei der Streckung werden die Abstände zwischen den Frames grösser. Dadurch kommt es zu Schwankungen in der Amplitude. Diese Schwankungen sind in Abbildung~\ref{fig:ola05} gut zu erkennen. Diese Amplitudenschwankungen sind als Flattereffekt hörbar.
+
+\paragraph{OLA verkürzung 1.5:}
+Als nächstes wird das Referenzsignal mit dem Overlap-Add (OLA) Verfahren um den Faktor 1,5 gestaucht. Das Ergebnis dieser Stauchung ist in Abbildung \ref{fig:ola15} dargestellt. Ähnlich wie bei der zuvor behandelten Streckung ist die Amplitude des Signals nicht konstant, was auf die Entstehung von Artefakten hinweist. Diese Schwankungen sind jedoch deutlich schwächer, da die Frames stärker überlagert wurden. Die entstehenden Artefakte sind in Abbildung \ref{fig:ola15} deutlich erkennbar. Es wäre zu erwarten gewesen das mehr Artefakte entstehen, da die Frames stärker überlagert wurden. Dies ist jedoch nicht der Fall. Das könnte daran liegen, dass die einzelnen Frames in diesem Beispiel vorteilhaft übereinander liegen, womit is zu nicht merkbaren Phasensprüngen kommt.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Sinus verkürzt mit Overlap-Add (1.5).png}
+    \caption{Verkürztes Referenzsignal mit OLA}
+    \label{fig:ola15}
+\end{figure}
+
+\paragraph{PV Streckung 0.5:}
+Nun wird wie die OLA implementation die PV implementation analysiert. Dabei wurde das Referenzsignal mit dem PV verfahren um den Faktor 0.5 gestreckt. Das Ergebnis ist in Abbildung~\ref{fig:pv05} dargestellt. Hier sind deutlich mehr Phasensprünge zu erkennen. Diese entstehen durch die Veränderung der Phase bei der Streckung. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Sinus gestreckt mit Phase-Vocoder (0.5).png}
+    \caption{Gestrecktes Referenzsignal mit PV}
+    \label{fig:pv05}
+\end{figure}
+
+\paragraph{PV verkürzung 1.5:}
+Auch für den PV wird das Signal neben der Streckung auch mit einem Faktor von 1.5 verkürzt. Hier scheint es jedoch zu weniger Phasensprüngen zu kommen. Das Ergebnis ist in Abbildung~\ref{fig:pv15} dargestellt. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Sinus verkürzt mit Phase-Vocoder(1.5).png}
+    \caption{Gestrecktes Referenzsignal mit PV}
+    \label{fig:pv15}
+\end{figure}
+
+\paragraph{}
+Die Implementierung scheint grundlegend zu funktionieren und die gewünschte Zeitdehnung oder -stauchung zu erreichen. Es sind jedoch ganz klar Artefakte zu erkennen. Manche entstehen aus den Limitierung des einzelnen Verfahren. Andere hingegen entstehen durch die Implementierung, wie z.B das ungewollte Verhalten beim ersten Frame. Bei der Implementierung besteht noch potential zur Verbesserung für eine robustere verarbeitung für alle Signale. Ebenfalls wären nach weitere Testfälle sinnvoll, wie die Analyse bei verschiedenen Streckungsfaktoren um potentielle Artefakte zu erkennen. Denn nicht jede Zeitdehnung führt zu der gleichen Ausprägung von Artefakten. 
+
+\subsection{Ausblick}
+In  diesem Kapitel werden mögliche Schritte zur Verbesserung und Weiterentwicklung der Implementierung aufgezeigt. Dabei werden verschiedene Aspekte betrachtet, die zur Verbesserung der Leistungsfähigkeit und Genauigkeit der Anwendung beitragen können. Dazu gehören die Benutzeroberfläche, die Implementierung von TSM-Verfahren, die Unterstützung verschiedener Formate und vieles mehr.
+
+\paragraph{Benutzeroberfläche:}
+Die derzeitige Benutzeroberfläche ist sehr einfach gehalten und bietet nur grundlegende Funktionen. Um die Benutzerfreundlichkeit zu erhöhen und die Anwendung attraktiver zu gestalten, könnten weitere Funktionen hinzugefügt werden. Dazu gehören beispielsweise die Möglichkeit, verschiedene TSM-Verfahren auszuwählen, die Einstellung von Parametern wie der Streckungsfaktor oder die Wahl des Fensters, die Anzeige von Spektrogrammen oder anderen visuellen Darstellungen des Audiosignals, die Möglichkeit, das Ergebnis zu speichern oder zu exportieren, und vieles mehr. Durch die Implementierung dieser Funktionen könnte die Anwendung erheblich erweitert und verbessert werden. Zudem könnte die Benutzeroberfläche für verschiedene Geräte und Bildschirmgrössen optimiert werden, um eine optimale Benutzererfahrung zu gewährleisten.
+
+\paragraph{TSM-Verfahren:}
+In dieser Arbeit wurden nur zwei TSM-Verfahren implementiert. Es gibt jedoch viele weitere Verfahren, die in der Literatur beschrieben sind und die für verschiedene Anwendungsfälle geeignet sind. Einige dieser Verfahren könnten in zukünftigen Arbeiten implementiert und untersucht werden, um die Leistungsfähigkeit und Genauigkeit der verschiedenen Methoden zu vergleichen. Dazu gehören beispielsweise WSOLA, HPSS und andere Verfahren, die in der Literatur beschrieben sind. Durch den Vergleich verschiedener Verfahren können die Vor- und Nachteile der einzelnen Methoden besser verstanden und bewertet werden.
+
+\paragraph{Formate:}
+Die Implementierung unterstützt nur das WAV Format. Um die Benutzerfreundlichkeit zu erhöhen, sollten auch andere Formate wie MP3 oder FLAC unterstützt werden. Dies würde die Anwendung für eine breitere Benutzerbasis zugänglich machen und die Flexibilität erhöhen.
+
+\paragraph{Testing:}
+Die komplette Software wurde nur rudimentär getestet um die Kernfunktionalität sicherzustellen. Darüber hinause besteht noch viel potential die Implementation zu testen. Dazu gehört auch die Ausführung auf verschiedenen Platformen und Browsern. Ebenfalls sollten die Benutzeroberfläche auf intuitivität, Benutzerfreundlichkeit und Missbrauch durch Dritte getestet werden.
+
+\subsection{Rückblick}
+Keine praktische Arbeiten verläuft ohne Komplikationen und Rückschritte. Jedoch sind genau diese Misserfolge und Rückschritte diejenigen, die am meisten lehren. In dieser Arbeit wurden viele Herausforderungen gemeistert und viele neue Erkenntnisse gewonnen. Die Implementierung der verschiedenen TSM-Verfahren war eine komplexe Aufgabe, die viel Zeit und Geduld erforderte. Die Auseinandersetzung mit den theoretischen Grundlagen und die Umsetzung in die Praxis waren eine wertvolle Erfahrung, die das Verständnis für die Audioverarbeitung vertieft hat. Die Analyse und Diskussion der Ergebnisse haben gezeigt, dass die Implementierung grundsätzlich erfolgreich war und die grundlegenden Ziele erreicht wurden. Nichtsdestotrotz bestehn noch viel Potential um die Qualität zu verbessern. Die Auswertung der Artefakte hat gezeigt, dass die verschiedenen TSM-Verfahren unterschiedliche Artefakte erzeugen und dass es wichtig ist, diese zu verstehen und zu minimieren. Insgesamt war die Arbeit eine wertvolle Erfahrung. Sie zeigte eine abgerundete Sicht auf die Audioverarbeitung, Webentwicklung und Projektdokuemntation.

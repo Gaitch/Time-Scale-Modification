@@ -1,0 +1,60 @@
+\section{Problemstellung}
+\label{sec:problemstellung}
+Bevor man sich mit der Time-Scale Modification beschäftigt, muss zuerst verstanden werden, weshalb einfache Verfahren zur Streckung oder Stauchung eines Audiosignals nicht ausreichen. Bei Verfahren wie dem Upsampling oder Downsampling werden die Frequenzen verändert, was zur Folge hat, dass sich auch der Klang des Signals ändert. Beispielsweise ändert sich bei Wiedergabe mit doppelter Geschwindigkeit die Tonhöhe um eine Oktave. Warum dies genau so ist, wird in den folgenden Abschnitten näher erläutert. Bei den folgenden Abbildungen handelt es sich um vereinfachte künstliche Darstellungen, um die Problematik zu verdeutlichen und stehen nicht im Zusammenhang mit den in Kapitel~\ref{sec:implementation} beschriebenen Verfahren.
+
+\paragraph{}
+Als Beispiel wird ein Sinuston mit einer Frequenz von 440 Hz verwendet, was einem A4-Ton entspricht \cite{Lazzarini2019ComputerMI}. In Abbildung~\ref{fig:440 Hz Sinus} ist das Beispielsignal über zwei Perioden dargestellt. An diesem Signal werden nun einfache Verfahren zur Streckung und Stauchung angewendet, um die dabei auftretenden Probleme zu verdeutlichen.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{images/440 Hz Sinus.png}
+    \caption{Abgetasteter Sinus mit einer Frequenz von 440 Hz über zwei Perioden}
+    \label{fig:440 Hz Sinus}
+\end{figure}
+
+\subsection{Upsampling}
+Als erstes wird ein einfaches Upsampling-Verfahren betrachtet. Dabei soll das Signal um den Faktor zwei gestreckt werden. Um dies zu erreichen, gibt es zwei Möglichkeiten. Zum einen kann das Signal durch das Einfügen von Nullen gestreckt werden. Zum anderen kann das Signal durch Interpolation gestreckt werden.
+
+\paragraph{Zero Padding:}
+Nehmen wir einmal an das wir ein Signal strecken wollen. Um ein Audiosignal zu strecken, kann es upgesamplet werden und anschliessend mit einem Tiefpassfilter gefiltert werden. Das Upsampling kann mit verschiedenen Methoden durchgeführt werden. Eine Möglichkeit ist das Einfügen von Nullen zwischen den Samples. In Abbildung~\ref{fig:Zero Padding} lässt sich nun erkennen das das Signal tatsächlich um die gewünschte Länge gestreckt wurde.
+Allerdings sieht man auch ganz klar das sich die Periode des Signals verdoppelt hat. Das bedeutet das dabei die Frequenz halbiert wurde und somit mit 220 Herz die Tonhöhe um eine Oktave tiefer ist~\cite{Bosi2004IntroductionTD}.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{images/Sinus - gestreckt mit Zero Padding.png}
+    \caption{Gestreckter Sinus durch Zero Padding}
+    \label{fig:Zero Padding}
+\end{figure}
+
+\paragraph{Interpolation:}
+Eine Alternative zum Zero Padding ist die Interpolation der Samples. Dabei werden neue Samples zwischen den vorhandenen generiert. Die Werte dieser neuen Samples werden anhand des Abstands zu den benachbarten Originalsamples berechnet. In Abbildung~\ref{fig:Interpolation} ist zu erkennen, dass das Signal auch durch Interpolation gestreckt wurde. Dabei verdoppelt sich jedoch die Periode des Signals, was zur Halbierung der Frequenz führt. Dies bedeutet, dass die Tonhöhe um eine Oktave tiefer wird. Dieses Verfahren wird jedoch häufiger zur Visualisierung von Audiosignalen verwendet~\cite{werner2018digitale}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{images/Sinus - gestreckt mit Interpolation.png}
+    \caption{Gestreckter Sinus mit Interpolation}
+    \label{fig:Interpolation}
+\end{figure}
+
+\paragraph{}
+Bei beiden Methoden entsteht also das gleiche Problem. Bevor potentielle Lösungen betrachtet werden, sollen im nächsten Abschnitt zuerst die Probleme beim Downsampling untersucht werden.
+
+\subsection{Downsampling}
+Soll das Signal verkürzt beziehungsweise gestaucht werden, können Samples entfernt werden. Abbildung~\ref{fig:dec} zeigt das heruntergesampelte Signal. In diesem Beispiel wurde jedes zweite Sample entfernt. Das Signal hat dadurch eine Frequenz von 880 Hz, was bedeutet, dass die Tonhöhe um eine Oktave höher ist. Auch beim Downsampling entsteht das Problem, dass sich die Frequenzen des Signals verändern. Das Signal wird höher~\cite{Bosi2004IntroductionTD}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{images/Sinus - dezimiert.png}
+    \caption{Gestauchter Sinus durch Downsampling}
+    \label{fig:dec}
+\end{figure}
+ 
+\subsection{Aufgabenstellung}
+Wie sich an dem vorherigen Beispiel erkennen lässt, ist es nicht möglich, ein Audiosignal auf eine einfache Weise zu strecken oder zu stauchen, ohne dass sich die Frequenz verändert. Basierend auf dieser Problemstellung sollen in dieser Arbeit verschiedene Methoden zur Time-Scale Modification implementiert, untersucht und verglichen werden. Dabei soll aufgezeigt werden, wie sich die verschiedenen Methoden auf das Audiosignal auswirken und wie gut sie die Tonhöhe (Pitch) und die Zeit (Time) erhalten.
+
+\paragraph{} 
+Bei der Implementierung handelt es sich um eine Webapplikation, die es ermöglicht, Audiosignale zu laden und diese mit verschiedenen Methoden zu strecken oder zu stauchen. Der Fokus liegt dabei auf der Overlap-Add-Methode und dem Phase Vocoder. Diese beiden Methoden werden in nativem JavaScript implementiert und auf einer Webseite präsentiert.
+
+\paragraph{} 
+Da keine dieser Verfahren eine perfekte Time-Scale Modification ermöglicht, ohne hörbare Artefakte zu erzeugen, sollen diese Artefakte identifiziert und analysiert werden. Dadurch soll aufgezeigt werden, welche Methode für welchen Anwendungsfall am besten geeignet ist, welche Artefakte bei den verschiedenen Verfahren entstehen und wie sich diese durch bestimmte Techniken optimieren lassen.

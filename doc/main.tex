@@ -1,0 +1,82 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage{graphicx}
+\usepackage{glossaries}
+\usepackage{biblatex}
+\usepackage{svg}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{csquotes}
+\usepackage[ngerman]{babel}
+\addbibresource{./bib/lit.bib}
+
+
+
+\providecommand{\keywords}[1]
+{
+  \small	
+  \textbf{\textit{Keywords---}} #1
+}
+
+\pagestyle{fancy}
+
+\setlength{\headheight}{14.5pt} % Increase head height
+\addtolength{\topmargin}{-2.5pt} % Adjust top margin to compensate
+\sloppy
+
+\begin{document}
+\fancyhead{}
+\fancyfoot{}
+\graphicspath{ { ./images/} }
+
+% Title page
+\input{sections/titlepage.tex}
+\pagebreak
+
+% Abstract
+\input{sections/abstract.tex}
+\pagebreak
+
+% Table of contents
+\tableofcontents
+\pagebreak
+
+
+
+\listoffigures
+\input{sections/glossary.tex}
+\pagebreak
+
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{}
+\fancyfoot[R]{}
+\fancyfoot[C]{\thepage}
+\fancyfoot[L]{}
+
+% \pagenumbering{arabic}
+% 
+% \pagestyle{plain}
+
+% -------- Sections --------
+\input{sections/einleitung.tex}
+\setcounter{page}{1}
+\pagebreak
+
+\input{sections/problemstellung.tex}
+\pagebreak
+
+\input{sections/methodik.tex}
+\pagebreak
+
+\input{sections/tsm.tex}
+\pagebreak
+
+\input{sections/implementation.tex}
+\pagebreak
+
+\input{sections/auswertung.tex}
+\pagebreak
+
+\printbibliography
+\end{document}

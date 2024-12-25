@@ -1,0 +1,95 @@
+\section{Implementation}
+\label{sec:implementation}
+In diesem Kapitel wird die Implementierung des Projekts detailliert beschrieben. Es wird erläutert, wie die einzelnen Komponenten entwickelt wurden und wie sie nahtlos zusammenarbeiten. Zunächst wird der Prozess des Einlesens der Daten und deren Weiterleitung durch die Pipeline beschrieben. Anschliessend wird die Gestaltung und Funktionalität der Benutzeroberfläche erläutert. Zum Schluss wird auf die Methoden und Techniken der Audioverarbeitung eingegangen. Abbildung~\ref{fig:dataflow} zeigt den groben Datenfluss durch die Implementierung.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[height=300px]{images/dataflow.png}
+    \caption{Datenflussdiagramm der Implementierung}
+    \label{fig:dataflow}
+\end{figure}
+
+\subsection{File Handling}
+Damit der Benutzer Audiodaten hochladen kann, muss eine Möglichkeit geschaffen werden, die Daten zu empfangen und zu verarbeiten. Dafür wurde eine Schnittstelle entwickelt, die es dem Benutzer ermöglicht, Audiodaten hochzuladen. Das File wird über ein Formular hochgeladen welches über einen Button im Header aktiviert wird. Das aufgerufene Formular besteht aus einem File-Input Feld, in dem der Benutzer die Datei auswählen kann, die hochgeladen werden soll. Wenn der Benutzer die Datei ausgewählt hat, wird ein Event-Listener auf das Input-Feld registriert, der aufgerufen wird. In diesem Event-Listener wird eine Funktion aufgerufen welche die Datei einliest und in ein Array von Bytes umgewandelt. Dieses Array von Bytes wird dann an die Datenverarbeitung weitergegeben. Dazu mehr im Kapitel Signalverarbeitung~\ref*{sec:signalverarbeitung}.
+
+\paragraph{Wavefile:}
+Für die Implementation wurde entschieden mit Wavefiles, auch bekannt als WAV-Datei (Waveform Audio File Format), zu arbeiten. Diese sind unkomprimiert und können somit direkt eingelesen werden. Ein Wavefile ist ein Dateiformat für die Speicherung von digitalen Audiodaten und speichert diese in einem unkomprimierten Format, was bedeutet, dass es eine genaue und verlustfreie Darstellung des Originalsignals ermöglicht\cite{microsoft_wavefile}. Es ist eines der häufigsten Dateiformate für die Speicherung von Audiodaten auf Computern und wird häufig in der Musikproduktion, in Multimedia-Anwendungen und in der Audiobearbeitung verwendet. Wavefiles enthalten Informationen wie die Abtastrate, die Bit-Tiefe (Anzahl der Bits pro Sample), die Anzahl der Audiokanäle (mono oder stereo) und die Länge der Audiodaten.
+
+\paragraph{}
+Um effektiv and die Samples und andere wesentliche Informationen zu gelangen, wurde die Bibliothek wavefile.js verwendet. WaveFile.js ist eine JavaScript-Bibliothek, die es ermöglicht, Wavefiles einfach eizulesen, bearbeitet und gespeichert werden. Sie bietet Funktionen zur direkten Manipulation von Audiodaten, Formatkonvertierung, Bearbeitung von Metadaten und Erstellung neuer Wavefiles. WaveFile.js ist sowohl im Browser als auch in Node.js einsetzbar und erleichtert die Arbeit mit Audiodateien erheblich~\cite{wavefilejs}. Bei den verwendeten funktionen handelt es sich um \textit{getSamples()} um die Samples zu extrahieren und \textit{fromScratch()} um ein Wavefile wieder zu erstellen. Zusätzlich wurden noch einige funktionen gebraucht um Eigenschaften des Files zu extrahieren, wie Anzahl Channels, Bitrate und Samplerate. 
+
+\paragraph{}
+Das hochgeladene Wavefile wird zusätlzlich, bevor es zur Datenverarbeitung weitergegeben wird, noch direkt an ein Audio Element übergeben, um das origanale, unverarbeite Audiofile abspielen zu können. Die geschieht über das erstellen eines Blob Objektes. 
+
+\paragraph{Blob URL:}
+Ein Blob (Binary Large Object) ist ein JavaScript-Objekt, das binäre Daten speichert. Es wird häufig verwendet, um grosse Mengen von binären Daten, wie z.B. Bilder, Videos oder Audiodaten, zu handhaben. Blobs bieten eine effiziente Möglichkeit, solche Daten zu speichern und zu verarbeiten. Ein Blob-Objekt kann aus verschiedenen Quellen erstellt werden, wie z.B. Arrays von Byte-Daten, Text oder anderen Blobs\cite{blob_audio_js}. Bei Audiodaten können diese aus einer Datei oder einem anderen binären Datenstrom stammen. Ein Blob-Objekt kann mit einem HTML-Audio-Tag verwendet werden, um Audiodaten im Browser abzuspielen. Dazu muss das Blob-Objekt in eine URL umgewandelt werden, die das Audio-Tag verwenden kann.
+
+\subsection{Signalverarbeitung}
+\label{sec:signalverarbeitung}
+Nun werden ein paar Schlüsselpunkte und Implementationseintscheidungen der Signalverarbeitung erläutert. Im grossen und ganzen folgte die Implementation den in Kapitel \ref{sec:tsm} beschriebenen Methoden. Dabei wurde darauf geachtet, dass die Methoden möglichst einfach und verständlich implementiert wurden. Da JavaScript jedoch nicht für die Verarbeitung von Audiodaten optimiert ist, mussten einige Workarounds gefunden werden. 
+
+\paragraph{Tensor Flow:}
+Zum Beispiel wurde für die Implementation des Phase Vocoder aus Kapitel \ref{sec:pv} die Bibliothek TensorFlow verwendet. Denn JavaScript besitzt nativ keinen Support für die Entwicklung mit komplexen Zahlen. Das würde auch die Arbeit mit der Fast Fourier Transformation erschweren. Aus diesem Grund wurde entschieden, die Drittbibliothek TensorFlow zu verwenden. TensorFlow ist eine Open-Source-Softwarebibliothek für maschinelles Lernen, die von Google entwickelt wurde~\cite{Abadi2016TensorFlowLM}. Sie bietet eine Vielzahl von Funktionen und Werkzeugen zur Entwicklung und Implementierung von maschinellen Lernalgorithmen. Doch der Grund, weshalb in dieser Arbeit auf TensorFlow zurückgegriffen wurde, ist die Möglichkeit, die Fast Fourier Transformation zu verwenden. 
+
+\paragraph{}
+Damit dies funktionierte, mussten die JavaScript-Arrays zuerst in Tensoren umgewandelt werden. Der Umgang mit Tensoren ist nicht genau gleich wie mit Arrays, weswegen einige Funktionen umgeschrieben werden mussten. Die Arbeit mit Tensoren hat auch seine Vorzüge, denn TensorFlow bietet eine Vielzahl von Funktionen zur Verarbeitung von Tensoren, wie z.B. mathematische Operationen und lineare Algebra, was der Numpy-Bibliothek in Python ähnelt. Wenn von Anfang an mit Tensoren gearbeitet worden wäre, hätte dies die Implementierung vereinfacht und die Performance verbessert.
+
+\subsection{User Interface}
+Eines der Hauptziele dieser Arbeit besteht darin, die Verarbeitung von Audiodaten auf eine anschauliche und intuitive Weise zu präsentieren. Dies beinhaltet die Gestaltung einer benutzerfreundlichen Benutzeroberfläche, die leicht zugänglich ist und es dem Benutzer ermöglicht, die verarbeiteten Audiodaten strukturiert zu visualisieren und miteinander zu vergleichen. Des Weiteren ist vorgesehen, verschiedene Visualisierungstechniken zu implementieren, wie beispielsweise Spektrogramme, die für alle Audiodateien verfügbar sind, sowie Echtzeit-Waveforms und Spektrogramme speziell für das Original-Audiofile.
+
+\paragraph{Tailwind CSS:}
+Für die Gestaltung der Benutzeroberfläche wurde das CSS-Framework Tailwind CSS verwendet. Tailwind CSS verwendet einen Utility-First-Ansatz, der es ermöglicht, Eigenschaften wie Grösse, Abstand, Farbe und Schriftart direkt im HTML-Markup festzulegen. Dieser Ansatz ermöglicht eine präzise und flexible Definition des Erscheinungsbilds durch die Kombination von Klassen. Darüber hinaus ist Tailwind CSS hochgradig konfigurierbar, wodurch benutzerdefinierte Anpassungen wie Farben, Schriftarten und Abstände ermöglicht werden. Zur Optimierung der Performance bietet Tailwind CSS Werkzeuge wie PurgeCSS und JIT-Kompilierung, die die Dateigrösse reduzieren. Aufgrund dieser Eigenschaften hat sich Tailwind CSS als effizientes Werkzeug zur Erstellung benutzerdefinierter Benutzeroberflächen in der Frontend-Entwicklung etabliert~\cite{tailwind_css}.
+
+\paragraph{Web Audio API:}
+Zu Beginn der Arbeit wurden verschiedene Technologien evaluiert. Dabei wurde auch die Web Audio API in Betracht gezogen. Die Web Audio API ist eine JavaScript-API zur Erzeugung, Verarbeitung und Wiedergabe von Audio in Webanwendungen. Sie ermöglicht die Steuerung von Audioquellen, Effektknoten und Zielen, wodurch komplexe Audiopipelines erstellt werden können. Die API unterstützt die Wiedergabe von Audiodaten aus Dateien oder Streams und die Anwendung von Echtzeit-Effekten wie Reverb oder Delay. Ausserdem können Audiodaten aus Mikrofonen aufgenommen und die Wiedergabe gesteuert werden~\cite{mdn_web_audio_api}.Einige Nodes der Web Audio API:
+\begin{itemize}
+\item \textbf{AudioContext}: Schnittstelle zur Audiohardware
+\item \textbf{AnalyserNode}: Analysiert Audiodaten
+\item \textbf{ScriptProcessorNode}: Benutzerdefinierte Audioverarbeitung
+\item \textbf{MediaStreamAudioSourceNode}: Liest Audiodaten aus einem MediaStream
+\end{itemize}
+
+Die API ermöglicht auch benutzerdefinierte Nodes zur Implementierung komplexer Audioverarbeitungsalgorithmen. Abbildung~\ref{fig:webaudioapi} zeigt die Verknüpfung der einzelnen Nodes.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{images/webaudioapi_en.png}
+    \caption{Visualisierung der Web Audio API Nodes}
+    \label{fig:webaudioapi}
+\end{figure}
+
+\paragraph{}
+Das Problem bei der Verwendung der Web Audio API liegt darin, dass sie auf die Echtzeitverarbeitung von Audiodaten ausgelegt ist. Das bedeutet, dass die Audiodaten in kleinen Blöcken verarbeitet werden, was zu einer höheren Komplexität und speziellen Implementierungserfordernissen führt. Daher wurde entschieden, die Web Audio API nicht für die Verarbeitung der Audiodaten zu verwenden. Stattdessen wurde die zuvor erwähnte Bibliothek Wavefile.js genutzt.
+
+\paragraph{}
+Da im Rahmen der Evaluierung der Web Audio API Zeit investiert wurde, um ihr Potenzial und ihre Funktionsweise zu prüfen, wurde entschieden, die Web Audio API für die Visualisierung der Audiodaten zu verwenden. Auf diese Weise konnten die bereits getätigten Aufwände genutzt werden. Ein AnalyserNode wurde erstellt, um die Audiodaten zu analysieren und die Ergebnisse in Echtzeit anzuzeigen.
+
+\subsection{Probleme}
+Im Rahmen dieses Projektes wurden viele neue theoretische Konzepte, Technologien und Verfahren erkundet, was zu zahlreichen Problemen führte, die gelöst werden mussten. Das Projekt war ein Lernprozess mit vielen Herausforderungen und befindet sich eindeutig noch in der Entwicklungsphase. Daher basieren einige Teile der Implementierung auf Workarounds. Die Struktur des Codes ist noch nicht optimal, und es gibt viele Verbesserungspotenziale, auch in Bezug auf die Performance.
+
+\paragraph{Performance:}
+Eine Wartezeit von einigen Sekunden ist bei der Verarbeitung von Audiodaten kaum zu vermeiden. Die Verarbeitung ist ein rechenintensiver Prozess, besonders bei grossen Audiodateien oder komplexen Algorithmen. Bei dieser Implementierung gibt es jedoch einige Entscheidungen, die die Performance beeinträchtigen und die Verarbeitungszeit verlängern. Die Anzahl Frames entscheided über den Aufwand der Verarbeitung. Je mehr Frames erzeugt werden, desto aufwändiger wird die in Kapitel~\ref{sec:pv} beschriebene Phase Vocoder Methode. Eine Möglichkeit, die Performance zu verbessern, wäre die Reduzierung der Anzahl der Frames, was jedoch die Qualität des Audiosignals beeinträchtigen würde.
+
+\paragraph{}
+Eine weitere Möglichkeit wäre es, die Verarbeitung der Audiodaten in einen Web Worker auszulagern. Ein Web Worker ist ein Hintergrundprozess, der im Browser ausgeführt wird und es ermöglicht, rechenintensive Aufgaben auszulagern und die Benutzeroberfläche zu entlasten~\cite{mdn_web_workers}. Durch die Verwendung von Web Workern kann die Leistung verbessert und die Reaktionsfähigkeit der Benutzeroberfläche erhöht werden, da die bereits verarbeiteten Daten geladen werden können, ohne auf die vollständige Verarbeitung warten zu müssen.
+
+\paragraph{}
+Ein weiteres Problem für die Performance ist die Erzeugung der Spektrogramme. Die derzeitige Implementierung führt eine zweite Kurzzeit-Fouriertransformation durch, um das Spektrogramm zu erzeugen. Dies ist jedoch nicht optimal, da die Daten bereits verarbeitet wurden und die Spektrogramme direkt aus diesen Daten extrahiert werden könnten. Eine Möglichkeit, die Performance zu verbessern, wäre es, die Spektrogramme direkt aus den verarbeiteten Daten zu generieren, anstatt eine zusätzliche Transformation durchzuführen. Dies würde die Verarbeitungszeit verkürzen und die Leistung verbessern.
+
+\paragraph{Paradigma:}
+Die derzeitige Struktur des Codes ist auf eine prototypische und schnelle Implementierung ausgelegt. Dies führt dazu, dass der Code nicht optimal strukturiert ist und es zu Redundanzen kommt. Es wurde versucht, den Code auf verschiedene Dateien aufzuteilen und die Funktionen sinnvoll zu verallgemeinern. Dennoch gibt es viel Verbesserungspotential.
+
+\paragraph{}
+Eine Möglichkeit, die Struktur des Codes zu verbessern, wäre es, die Funktionen in sinnvolle Klassen zu gruppieren und die Datenverarbeitung in separate Module auszulagern. Dies würde die Lesbarkeit und Wartbarkeit des Codes verbessern und die Redundanz reduzieren. Ausserdem könnte die Verwendung von Design Patterns wie MVC (Model-View-Controller) oder MVVM (Model-View-ViewModel) helfen, die Struktur des Codes zu verbessern und die Trennung von Daten, Logik und Präsentation zu erleichtern.
+
+\paragraph{Framework}
+Eine andere Überlegung wäre, auf ein Framework zurückzugreifen, das die Struktur des Codes vorgibt. Ein Framework wie React oder Angular würde die Struktur des Codes vorgeben und die Entwicklung erleichtern. React ist eine JavaScript-Bibliothek für die Erstellung von Benutzeroberflächen, die von Facebook entwickelt wurde. Sie ermöglicht die Entwicklung von komponentenbasierten UIs für Webanwendungen~\cite{react}. Dies würde auch die Implementierung in TypeScript ermöglichen.
+
+\paragraph{}
+TypeScript ist eine von Microsoft entwickelte Programmiersprache, die statische Typisierung für JavaScript bietet. Sie erweitert JavaScript um statische Typen, Klassen und Module, was zu sichererem und besser strukturiertem Code führt~\cite{typescript}. TypeScript-Code wird in JavaScript kompiliert und findet breite Anwendung in der Web- und Softwareentwicklung. Allerdings würde dies bedeuten, dass die Implementierung von Grund auf neu gemacht werden müsste.
+
+\paragraph{Redundanz}
+Ein weiteres Problem ist die Redundanz des Codes. Es gibt viele Stellen im Code, an denen ähnliche Funktionen wiederholt werden. Dies führt zu erhöhter Komplexität und erhöhtem Wartungsaufwand. Eine Möglichkeit, die Redundanz zu reduzieren, wäre die Verwendung von Funktionen und Klassen, um gemeinsame Funktionalitäten zu kapseln und wiederzuverwenden. Dies würde die Wartbarkeit des Codes verbessern und die Lesbarkeit erhöhen.
+
+\paragraph{}
+Vor allem bei der Gestaltung der HTML-Elemente gibt es viele Redundanzen. Die HTML-Elemente werden in den verschiedenen Komponenten immer wieder neu erstellt. Eine Möglichkeit, die Redundanz zu reduzieren, wäre es, die HTML-Elemente in separate Dateien auszulagern und sie bei Bedarf zu importieren. Dies würde ebenfalls die Wartbarkeit des Codes verbessern und die Lesbarkeit erhöhen.
